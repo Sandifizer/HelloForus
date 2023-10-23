@@ -1,62 +1,77 @@
-const express = require("express");
+const mysql2 = require("mysql2"); //импорт MYSQL
+const express = require("express");//импорт EXPRESS
+const bodyParser = require("body-parser");
 
 const app = express();
-app.get("/", function (request, response) {
-    response.writeHead(200, { 'Content-Type': 'text/html' });
-    response.end(`
-    <!doctype>
-    <html>
-        <head>
-            <meta charset="utf-8">
-            <title>Главная страница</title>
-            <style>
-                body{
-                  margin: 0;
-                  padding: 0;
-                  text-align: center;
-                }
-                h1{
-                  background-color: #5B2C6F;
-                  color: white;
-                  padding: .5em;
-                  font-familt: 'Consolas'
-                }
-            </style>
-        </head>
-            <h1> Hello </h1>
-            <h2>Octagon NodeJS Test</h2>
-            <address>
-  
-        </body>
-    <html>
-`);
-})
-app.get("/static", function (request, response) {
 
-    response.writeHead(200, { 'Content-Type': 'text/html' });
-    response.end(`
-    <!doctype>
-    <html>
-            <header> Hello </header>
-            <body>Octagon NodeJS Test</body>
-    <html>
-`);
-})
-app.get("/dynamic", function (request, response) {
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
-    console.log(request.query);
-    let a = request.query.a;
-    let b = request.query.b;
-    let c = request.query.c;
+//открытие подключения
+const pool = mysql2.createPool({
+    host: "localhost",
+    user: "root",
+    database: "ChatBotTests",
+    password: "1274812rys",
+});
 
-    if (isNaN(a) || null) {
-        response.send("<header>ERROR</header>");
-    } else if (isNaN(b) || null) {
-        response.send("<header>ERROR</header>");
-    } else if (isNaN(c) || null) {
-        response.send("<header>ERROR</header>");
-    } else response.send(`<header>Calculated</header>
-            <body>${a * b * c / 3}</body>`);
+//Создание путей
+
+app.get("/", function (request, response) { //Главная страница
+    response.sendFile(__dirname + "/index.html");
+});
+app.get('/getAllItems', function (request, response) {
+    pool.query('SELECT * FROM items', function (error, results, fields) {
+        if (error) throw error;
+        response.json(results); //возврат масива 
+    });
+});
+
+const urlencodedParser = express.urlencoded({ extended: false });
+
+app.get("/addItem", function (request, response) { //Создание Записей
+    response.sendFile(__dirname + "/formADD.html");
+});
+app.post("/addItem", urlencodedParser, function (request, response) {
+    if (!request.body) return response.sendStatus(400);
+    const Name = request.body.Name;
+    const description = request.body.description;// description было использовано вместо desc,так как это слово зарезервированно SQL
+    pool.query("INSERT INTO items (Name, description) VALUES (?,?)", [Name, description], function (err, data) {  //Данные из формы 
+        if (err) return console.log(err);
+        response.redirect("/getAllItems");// перенаправление для отслеживания изменений в БД
+    });
 
 });
-app.listen(3000, () => console.log('сервер запущен'));
+
+app.get("/deleteItem", function (request, response) { //удаление записей
+    response.sendFile(__dirname + "/formDELL.html");
+});
+app.post("/deleteItem", function (request, response) {
+    if (!request.body) return response.sendStatus(400);
+    const id = request.body.id;
+    pool.query("DELETE FROM items WHERE id=?", [id], function (err, data) {
+        if (err) return console.log(err);
+        response.redirect("/getAllItems");
+    });
+});
+
+
+app.get("/updateItem", function (request, response) { //Обновление записей
+    response.sendFile(__dirname + "/formUPDATE.html");
+});
+app.post("/updateItem", urlencodedParser, function (request, response) {
+
+    if (!request.body) return response.sendStatus(400);
+    const id = request.body.id;
+    const Name = request.body.Name;
+    const description = request.body.description;
+
+    
+    pool.query("UPDATE items SET name=?, description=? WHERE id=?", [Name, description , id], function (err, data) {
+        if (err) return console.log(err);
+
+        response.redirect("/getAllItems");
+    });
+});
+
+app.listen(3000, () => console.log('сервер ожидает подключения!'));
