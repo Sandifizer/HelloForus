@@ -54,7 +54,7 @@ app.get("/dynamic", function (request, response) {
     }
     
     for (let pr in request.query) {
-        if (isFinite(request.query[pr]) || request.query[pr] == null) {
+        if (isNaN(request.query[pr]) || request.query[pr] == null) {
             response.send("<header>ERROR</header>"); 
         } else {
             response.send(`<header>Calculated</header><body> ${request.query.a * request.query.b * request.query.c / 3}</body>`);
