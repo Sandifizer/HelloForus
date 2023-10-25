@@ -49,14 +49,20 @@ app.get("/dynamic", function (request, response) {
     let b = request.query.b;
     let c = request.query.c;
 
-    if (isNaN(a) || null) {
-        response.send("<header>ERROR</header>");
-    } else if (isNaN(b) || null) {
-        response.send("<header>ERROR</header>");
-    } else if (isNaN(c) || null) {
-        response.send("<header>ERROR</header>");
-    } else response.send(`<header>Calculated</header>
-            <body>${a * b * c / 3}</body>`);
+    let i = 0;//счётчик который считает неправильные переменные 
+    let arr = { a, b, c }; //даже если будет 1000 значений этот код их воспримет)
+    for (let pr in arr) {
+        if (isNaN(arr[pr]) || arr[pr] == null) {
+            i += 1;
+        }
+    }
 
-});
+    //если счётчик неправильных переменных хотябы больше 1 ,то выводиться ошибка 
+    if (i == 0) {
+        response.send(`<header>Calculated</header><body> ${a * b * c / 3 }</body>`);
+    } else {
+      response.send("<header>ERROR</header>");  
+    }
+   
+})
 app.listen(3000, () => console.log('сервер запущен'));
