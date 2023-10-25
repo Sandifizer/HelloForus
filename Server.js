@@ -45,24 +45,23 @@ app.get("/static", function (request, response) {
 app.get("/dynamic", function (request, response) {
 
     console.log(request.query);
-    let a = request.query.a;
-    let b = request.query.b;
-    let c = request.query.c;
-
-    let i = 0;//счётчик который считает неправильные переменные 
-    let arr = { a, b, c }; //даже если будет 1000 значений этот код их воспримет)
-    for (let pr in arr) {
-        if (isNaN(arr[pr]) || arr[pr] == null) {
-            i += 1;
+    
+    let Fields = ["a", "b", "c"];
+    for (let key in request.query) {
+        if (!Fields.includes(key)) {
+          response.send("<header>ERROR</header>"); 
         }
     }
-
-    //если счётчик неправильных переменных хотябы больше 1 ,то выводиться ошибка 
-    if (i == 0) {
-        response.send(`<header>Calculated</header><body> ${a * b * c / 3 }</body>`);
-    } else {
-      response.send("<header>ERROR</header>");  
+    
+    for (let pr in request.query) {
+        if (isFinite(request.query[pr]) || request.query[pr] == null) {
+            response.send("<header>ERROR</header>"); 
+        } else {
+            response.send(`<header>Calculated</header><body> ${request.query.a * request.query.b * request.query.c / 3}</body>`);
+        }
+        return 0;
     }
-   
+
+    
 })
-app.listen(3000, () => console.log('сервер запущен'));
+app.listen(3000, () => console.log('сервер запущен')); 
